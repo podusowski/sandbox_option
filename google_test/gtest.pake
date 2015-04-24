@@ -1,0 +1,2 @@
+target static_library gtest include_dirs(.) sources(gmock-gtest-all.cc gmock_main.cc)
+
