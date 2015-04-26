@@ -5,6 +5,19 @@
 
 using namespace testing;
 
+template<class arg_type>
+struct case_mock
+{
+    MOCK_METHOD1_T(call, void(arg_type));
+
+    void operator()(arg_type value)
+    {
+        call(value);
+    }
+};
+
+template<class T> using case_strict_mock = StrictMock<case_mock<T>>;
+
 TEST(option_tests, should_be_default_constructible)
 {
     option op;
@@ -21,18 +34,15 @@ TEST(option_tests, some_values_should_be_assignable)
     EXPECT_EQ(&op, &ref);
 }
 
-template<class arg_type>
-struct case_mock
+TEST(option_tests, convert_constructor_can_be_used_for_assignment)
 {
-    MOCK_METHOD1_T(call, void(arg_type));
+    option op{1};
 
-    void operator()(arg_type value)
-    {
-        call(value);
-    }
-};
+    case_strict_mock<int> int_case;
 
-template<class T> using case_strict_mock = StrictMock<case_mock<T>>;
+    EXPECT_CALL(int_case, call(1));
+    op.match([&] (int i) { int_case.call(i); });
+}
 
 TEST(option_tests, single_value_should_be_matched)
 {

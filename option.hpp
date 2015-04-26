@@ -30,6 +30,16 @@ struct option
 {
     using deleter_type = std::function<void()>;
 
+    option()
+    {
+    }
+
+    template<class T>
+    option(T value)
+    {
+        *this = value;
+    }
+
     ~option()
     {
         clear();
