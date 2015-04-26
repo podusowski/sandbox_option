@@ -14,6 +14,7 @@ TEST(option_tests, some_values_should_be_assignable)
 {
     option op;
 
+    // note the reassignment, this should be leak-free
     op = 1;
     auto & ref = (op = "hello");
 

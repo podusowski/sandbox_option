@@ -28,13 +28,22 @@ struct arg_type<Result(*)(Arg)>
 
 struct option
 {
-    //using deleter_type = std::functon<void(void*)>;
+    using deleter_type = std::function<void()>;
+
+    ~option()
+    {
+        clear();
+    }
 
     template<class T>
     option & operator = (T value)
     {
+        clear();
+
         type = &typeid(T);
         storage = new T(value);
+        deleter = [this] { delete reinterpret_cast<T*>(storage); };
+
         return *this;
     }
 
@@ -71,7 +80,15 @@ private:
         return *reinterpret_cast<T*>(storage);
     }
 
-    //deleter_type deleter;
+    void clear()
+    {
+        if (storage)
+        {
+            deleter();
+        }
+    }
+
+    deleter_type deleter;
     void * storage = nullptr;
     std::type_info const * type = nullptr;
 };
