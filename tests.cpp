@@ -3,6 +3,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <memory>
+
 using namespace testing;
 
 template<class arg_type>
@@ -29,7 +31,7 @@ TEST(option_tests, some_values_should_be_assignable)
 
     // note the reassignment, this should be leak-free
     op = 1;
-    auto & ref = (op = "hello");
+    auto & ref = (op = std::string("hello"));
 
     EXPECT_EQ(&op, &ref);
 }
@@ -42,6 +44,38 @@ TEST(option_tests, convert_constructor_can_be_used_for_assignment)
 
     EXPECT_CALL(int_case, call(1));
     op.match([&] (int i) { int_case.call(i); });
+}
+
+TEST(option_tests, movable_only_types_should_be_supported)
+{
+    option op;
+
+    op = std::make_unique<int>(1);
+}
+
+TEST(option_tests, reference_types_should_be_supported)
+{
+    option op;
+
+    int i = 5;
+    int & ref = i;
+
+    op = ref;
+
+    case_strict_mock<int> int_case;
+
+    EXPECT_CALL(int_case, call(5));
+    op.match([&] (int i) { int_case.call(i); });
+}
+
+TEST(option_tests, const_references_in_case_should_match_the_type)
+{
+    option op = 5;
+
+    case_strict_mock<int> int_case;
+
+    EXPECT_CALL(int_case, call(5));
+    op.match([&] (const int & i) { int_case.call(i); });
 }
 
 TEST(option_tests, single_value_should_be_matched)
